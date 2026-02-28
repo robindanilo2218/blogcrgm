@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>blog.crgm.app | Estrategias de Mantenimiento</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        industrial: {
+                            900: '#0f172a', // Fondo oscuro
+                            800: '#1e293b', // Tarjetas
+                            accent: '#f59e0b', // Ambar eléctrico
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; }
+        /* Ocultar barra de desplazamiento para un look más limpio de app */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-industrial-900 text-slate-300 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-industrial-800 border-b border-slate-700 sticky top-0 z-10 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="showHome()">
+                <i class="ph ph-lightning text-industrial-accent text-3xl"></i>
+                <span class="text-xl font-bold text-white tracking-wide">blog.crgm<span class="text-industrial-accent">.app</span></span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <!-- Indicador de Red -->
+                <div id="network-status" class="flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-900/50 text-green-400 border border-green-700">
+                    <i class="ph ph-wifi-high"></i>
+                    <span>Online</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8 relative">
+        
+        <!-- View: Lista de Artículos -->
+        <div id="view-home" class="fade-in block">
+            <header class="mb-10 text-center md:text-left">
+                <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4">Estrategias de <span class="text-industrial-accent">Mejora Continua</span></h1>
+                <p class="text-slate-400 text-lg max-w-2xl">Propuesta arquitectónica y operativa para la modernización tecnológica del Departamento de Mantenimiento Eléctrico mediante redes aisladas OT y aplicaciones Offline-First.</p>
+            </header>
+
+            <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Los posts se inyectarán aquí mediante JS -->
+            </div>
+        </div>
+
+        <!-- View: Artículo Individual -->
+        <div id="view-post" class="fade-in hidden max-w-3xl mx-auto bg-industrial-800 p-6 md:p-10 rounded-xl shadow-2xl border border-slate-700">
+            <button onclick="showHome()" class="flex items-center space-x-2 text-industrial-accent hover:text-yellow-300 transition-colors mb-6 font-semibold">
+                <i class="ph ph-arrow-left font-bold"></i>
+                <span>Volver al inicio</span>
+            </button>
+            <div id="post-content">
+                <!-- El contenido del post se inyecta aquí -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-industrial-800 border-t border-slate-700 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 py-6 text-center text-sm text-slate-500">
+            <p><i class="ph ph-hard-drives align-middle mr-1"></i> Sistema Offline-First alimentado por IndexedDB.</p>
+            <p class="mt-1">Mantenimiento Eléctrico &copy; 2024</p>
+        </div>
+    </footer>
+
+    <!-- Logic: IndexedDB y Renderizado -->
+    <script>
+        // --- 1. CONFIGURACIÓN DE INDEXEDDB ---
+        const DB_NAME = 'crgmBlogDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'posts';
+        let db;
+
+        // Entradas iniciales (Nuestra propuesta dividida en posts)
+        const initialPosts = [
+            {
+                id: 1,
+                title: "1. El Problema: La desconexión en el piso de planta",
+                excerpt: "Análisis de los cuellos de botella actuales, pérdida de trazabilidad y doble trabajo por falta de conectividad en el Gemba.",
+                content: `
+                    <h2 class="text-2xl font-bold text-white mb-4">Contexto Operativo</h2>
+                    <p class="mb-4">Actualmente, el flujo de información en el departamento de mantenimiento eléctrico presenta interrupciones críticas debido a la dependencia de una infraestructura de red (TI) que no está diseñada para las exigencias físicas de los entornos industriales.</p>
+                    <h3 class="text-xl font-semibold text-industrial-accent mt-6 mb-3">Cuellos de Botella Identificados (Mudas)</h3>
+                    <ul class="list-disc pl-5 space-y-2 mb-4">
+                        <li><strong>Doble Trabajo:</strong> Al no tener conexión en el punto de falla, el técnico anota en papel y transcribe después, duplicando el esfuerzo.</li>
+                        <li><strong>Pérdida de Trazabilidad:</strong> El control de refacciones pierde precisión. Si se retira un componente crítico en emergencia, el equipo no lo sabe hasta horas después.</li>
+                        <li><strong>Vulnerabilidad de TI:</strong> Caídas de internet o mantenimientos de servidores paralizan nuestras herramientas de gestión.</li>
+                    </ul>
+                    <p class="mb-4 text-slate-400 italic">Impacto: Tiempos muertos, inventario irreal y un MTTR (Tiempo Medio Para Reparar) artificialmente alto.</p>
+                `,
+                date: "Oct 24, 2024",
+                icon: "ph-warning-octagon"
+            },
+            {
+                id: 2,
+                title: "2. Visión Kaizen: Autonomía y cero tiempos muertos",
+                excerpt: "Nuestros objetivos: eliminar transcripciones manuales, inventario Just-in-Time y reducción del MTTR.",
+                content: `
+                    <h2 class="text-2xl font-bold text-white mb-4">Objetivo General</h2>
+                    <p class="mb-4">Implementar una infraestructura tecnológica autónoma operativa (Red OT) y desplegar el sistema crgm.app bajo una arquitectura offline-first. El propósito es garantizar el 100% de disponibilidad en la captura de datos.</p>
+                    <h3 class="text-xl font-semibold text-industrial-accent mt-6 mb-3">Métricas de Mejora</h3>
+                    <ul class="list-disc pl-5 space-y-2 mb-4">
+                        <li><strong>Eliminación del Doble Trabajo:</strong> Cero transcripciones. Captura única en el lugar de la falla.</li>
+                        <li><strong>Autonomía Tecnológica del 100%:</strong> Cero downtime por mantenimientos corporativos de TI.</li>
+                        <li><strong>Visibilidad en Tiempo Real:</strong> Descuento de inventario inmediato al sincronizar en red local.</li>
+                        <li><strong>Reducción del MTTR:</strong> Historial y diagramas disponibles localmente sin necesidad de internet.</li>
+                    </ul>
+                `,
+                date: "Oct 25, 2024",
+                icon: "ph-target"
+            },
+            {
+                id: 3,
+                title: "3. La Propuesta Técnica: Ecosistema Local",
+                excerpt: "Cómo funciona la combinación de una PWA Offline-First y nuestra propia micro-red OT.",
+                content: `
+                    <h2 class="text-2xl font-bold text-white mb-4">Arquitectura Tecnológica</h2>
+                    <p class="mb-4">Tres pilares que trabajan sin depender de la red corporativa ni de la nube:</p>
+                    <div class="bg-slate-900 p-4 rounded-lg mb-4 border border-slate-700">
+                        <h4 class="text-white font-bold mb-2"><i class="ph ph-device-mobile text-industrial-accent mr-2"></i>A. crgm.app (PWA Offline-First)</h4>
+                        <p class="text-sm">Aplicación Web Progresiva instalada en dispositivos. Usa IndexedDB para almacenar datos localmente. Carga instantánea mediante Service Workers.</p>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-lg mb-4 border border-slate-700">
+                        <h4 class="text-white font-bold mb-2"><i class="ph ph-router text-industrial-accent mr-2"></i>B. Infraestructura OT (Red Privada)</h4>
+                        <p class="text-sm">Servidor Linux/Debian ligero en el taller eléctrico y Access Points dedicados. Red cerrada, sin salida a internet.</p>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-lg mb-4 border border-slate-700">
+                        <h4 class="text-white font-bold mb-2"><i class="ph ph-arrows-left-right text-industrial-accent mr-2"></i>C. Sincronización Transparente</h4>
+                        <p class="text-sm">El técnico captura datos sin señal. Al volver al taller, el dispositivo detecta el Wi-Fi interno y sincroniza en segundo plano automáticamente.</p>
+                    </div>
+                `,
+                date: "Oct 26, 2024",
+                icon: "ph-cpu"
+            },
+            {
+                id: 4,
+                title: "4. Independencia de TI: Justificación de la Red Aislada",
+                excerpt: "Por qué utilizar la red corporativa pone en riesgo la operación de mantenimiento y cómo solucionarlo.",
+                content: `
+                    <h2 class="text-2xl font-bold text-white mb-4">¿Por qué crear nuestra propia red?</h2>
+                    <p class="mb-4">Depender de la red de TI (Tecnologías de la Información) en el piso de producción (Tecnología Operativa - OT) presenta riesgos inaceptables:</p>
+                    <ul class="list-disc pl-5 space-y-3 mb-4 text-slate-300">
+                        <li><strong class="text-white">Autonomía y Cero Burocracia:</strong> Resolvemos problemas de red nosotros mismos en minutos, sin abrir tickets de soporte a sistemas.</li>
+                        <li><strong class="text-white">Ciberseguridad por Aislamiento:</strong> Al no tener internet, nuestro servidor de mantenimiento es inmune a ataques de ransomware que golpeen a las oficinas.</li>
+                        <li><strong class="text-white">Cobertura en el Gemba:</strong> TI pone Wi-Fi en oficinas. Nosotros pondremos Wi-Fi donde están los tableros y las herramientas.</li>
+                    </ul>
+                `,
+                date: "Oct 27, 2024",
+                icon: "ph-shield-check"
+            },
+            {
+                id: 5,
+                title: "5. Análisis de Impacto (ROI)",
+                excerpt: "Inversión inicial casi nula frente a una reducción masiva en horas-hombre y control de refacciones.",
+                content: `
+                    <h2 class="text-2xl font-bold text-white mb-4">Costo / Beneficio</h2>
+                    
+                    <h3 class="text-xl font-semibold text-red-400 mt-4 mb-2">Inversión (CAPEX) - Mínima</h3>
+                    <ul class="list-disc pl-5 space-y-1 mb-4">
+                        <li>Licencias de Software: $0 (Código Abierto / PWA propia).</li>
+                        <li>Servidor: Equipo básico con Debian.</li>
+                        <li>Red: 1 o 2 Access Points y cable UTP.</li>
+                    </ul>
+
+                    <h3 class="text-xl font-semibold text-green-400 mt-4 mb-2">Ahorros (OPEX) - Masivos</h3>
+                    <ul class="list-disc pl-5 space-y-1 mb-4">
+                        <li>Recuperación de horas-hombre en trabajo administrativo.</li>
+                        <li>Optimización de compras al evitar desabastos fantasmas.</li>
+                        <li>Reducción del tiempo de máquina parada (MTTR).</li>
+                    </ul>
+                `,
+                date: "Oct 28, 2024",
+                icon: "ph-chart-line-up"
+            },
+            {
+                id: 6,
+                title: "6. Plan de Implementación Ágil",
+                excerpt: "Las 4 fases para desplegar crgm.app sin interrumpir la operación normal de la planta.",
+                content: `
+                    <h2 class="text-2xl font-bold text-white mb-4">Cronograma de Despliegue</h2>
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-industrial-accent pl-4 py-1">
+                            <h4 class="font-bold text-white">Fase 1: Preparación (Semanas 1-2)</h4>
+                            <p class="text-sm">Configuración del servidor local Linux y montaje del Access Point en el taller eléctrico.</p>
+                        </div>
+                        <div class="border-l-4 border-industrial-accent pl-4 py-1">
+                            <h4 class="font-bold text-white">Fase 2: Prueba Piloto (Semanas 3-4)</h4>
+                            <p class="text-sm">Una cuadrilla prueba la app en puntos ciegos simulando fallas y validando sincronización automática.</p>
+                        </div>
+                        <div class="border-l-4 border-industrial-accent pl-4 py-1">
+                            <h4 class="font-bold text-white">Fase 3: Transición (Semana 5)</h4>
+                            <p class="text-sm">Entrenamiento al resto del equipo y eliminación de bitácoras de papel en procesos integrados.</p>
+                        </div>
+                        <div class="border-l-4 border-industrial-accent pl-4 py-1">
+                            <h4 class="font-bold text-white">Fase 4: Rollout y Kaizen (Semana 6+)</h4>
+                            <p class="text-sm">Operación 100% en red OT. Inicio de ciclo de retroalimentación para mejoras continuas en la UI.</p>
+                        </div>
+                    </div>
+                `,
+                date: "Oct 29, 2024",
+                icon: "ph-calendar-check"
+            }
+        ];
+
+        // Inicializar IndexedDB
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onerror = (event) => {
+                console.error("Error al abrir IndexedDB:", event.target.error);
+            };
+
+            request.onupgradeneeded = (event) => {
+                db = event.target.result;
+                // Crear tabla de posts si no existe
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    store.createIndex('date', 'date', { unique: false });
+                }
+            };
+
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                console.log("IndexedDB inicializado correctamente.");
+                checkAndSeedData();
+            };
+        }
+
+        // Sembrar datos iniciales si la DB está vacía
+        function checkAndSeedData() {
+            const transaction = db.transaction([STORE_NAME], "readwrite");
+            const store = transaction.objectStore(STORE_NAME);
+            const countRequest = store.count();
+
+            countRequest.onsuccess = () => {
+                if (countRequest.result === 0) {
+                    console.log("DB vacía. Insertando posts iniciales...");
+                    initialPosts.forEach(post => {
+                        store.add(post);
+                    });
+                    transaction.oncomplete = () => loadPostsFromDB();
+                } else {
+                    loadPostsFromDB();
+                }
+            };
+        }
+
+        // --- 2. LÓGICA DE INTERFAZ DE USUARIO ---
+
+        // Leer posts desde IndexedDB y renderizar
+        function loadPostsFromDB() {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const posts = request.result;
+                // Ordenar por ID para mantener la secuencia de la propuesta
+                posts.sort((a, b) => a.id - b.id);
+                renderPostsGrid(posts);
+            };
+        }
+
+        function renderPostsGrid(posts) {
+            const grid = document.getElementById('posts-grid');
+            grid.innerHTML = ''; // Limpiar grilla
+
+            posts.forEach(post => {
+                const card = document.createElement('article');
+                card.className = "bg-industrial-800 rounded-xl p-6 border border-slate-700 shadow-lg hover:shadow-industrial-accent/20 hover:border-slate-600 transition-all cursor-pointer group flex flex-col h-full";
+                card.onclick = () => showPost(post.id);
+                
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-slate-700/50 p-2 rounded-lg text-industrial-accent group-hover:bg-industrial-accent group-hover:text-industrial-900 transition-colors">
+                            <i class="ph ${post.icon || 'ph-article'} text-2xl"></i>
+                        </div>
+                        <span class="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded">${post.date}</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-2 leading-tight group-hover:text-industrial-accent transition-colors">${post.title}</h2>
+                    <p class="text-slate-400 text-sm flex-grow">${post.excerpt}</p>
+                    <div class="mt-6 text-sm font-semibold text-industrial-accent flex items-center">
+                        Leer propuesta <i class="ph ph-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showPost(id) {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+
+            request.onsuccess = () => {
+                const post = request.result;
+                if(post) {
+                    const contentDiv = document.getElementById('post-content');
+                    contentDiv.innerHTML = `
+                        <div class="mb-8 border-b border-slate-700 pb-6">
+                            <div class="flex items-center space-x-3 text-slate-400 mb-4 font-mono text-sm">
+                                <i class="ph ${post.icon || 'ph-article'} text-xl text-industrial-accent"></i>
+                                <span>${post.date}</span>
+                                <span>•</span>
+                                <span class="bg-slate-700 px-2 py-0.5 rounded text-white text-xs">Lectura de 3 min</span>
+                            </div>
+                            <h1 class="text-3xl md:text-4xl font-extrabold text-white leading-tight mb-4">${post.title}</h1>
+                            <p class="text-lg text-industrial-accent font-medium">${post.excerpt}</p>
+                        </div>
+                        <div class="prose prose-invert max-w-none prose-a:text-industrial-accent prose-headings:text-white text-slate-300 leading-relaxed">
+                            ${post.content}
+                        </div>
+                    `;
+                    
+                    document.getElementById('view-home').classList.add('hidden');
+                    document.getElementById('view-post').classList.remove('hidden');
+                    window.scrollTo(0,0);
+                }
+            };
+        }
+
+        function showHome() {
+            document.getElementById('view-post').classList.add('hidden');
+            document.getElementById('view-home').classList.remove('hidden');
+        }
+
+        // --- 3. MANEJO DE RED (OFFLINE / ONLINE) ---
+        function updateNetworkStatus() {
+            const statusIndicator = document.getElementById('network-status');
+            if (navigator.onLine) {
+                statusIndicator.innerHTML = '<i class="ph ph-wifi-high"></i><span>OT Network (Sincronizado)</span>';
+                statusIndicator.className = 'flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-900/50 text-green-400 border border-green-700 transition-colors';
+            } else {
+                statusIndicator.innerHTML = '<i class="ph ph-wifi-slash text-red-400"></i><span class="text-red-400">Offline (Modo Trinchera)</span>';
+                statusIndicator.className = 'flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-900/30 text-red-400 border border-red-800 transition-colors';
+            }
+        }
+
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+
+        // Arrancar la aplicación
+        window.onload = () => {
+            updateNetworkStatus();
+            initDB();
+        };
+
+        // NOTA TÉCNICA PARA LA PWA REAL:
+        // En tu proyecto final, aquí se registraría el Service Worker:
+        /*
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registrado', reg))
+            .catch(err => console.error('Error al registrar SW', err));
+        }
+        */
+    </script>
+</body>
+</html>
