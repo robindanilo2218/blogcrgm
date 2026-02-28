@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>blog.crgm.app | PWA Dinámica</title>
+    <meta name="theme-color" content="#0f172a">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- 1. MANIFEST VIRTUAL INYECTADO -->
+    <script>
+        const manifestJSON = {
+            "name": "crgm.app Blog Operativo",
+            "short_name": "Blog OT",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0f172a",
+            "theme_color": "#0f172a",
+            "description": "Blog demostrativo Offline-First para el departamento eléctrico.",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><rect width='256' height='256' fill='%230f172a'/><path d='M104,216H56a8,8,0,0,1-8-8V104a8,8,0,0,1,8-8h48' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/><line x1='152' y1='104' x2='152' y2='216' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/><path d='M152,104h48a8,8,0,0,1,8,8V208a8,8,0,0,1-8,8H152' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/><path d='M128,40,40,128l88,88,88-88Z' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/></svg>",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                },
+                {
+                    "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><rect width='256' height='256' fill='%230f172a'/><path d='M104,216H56a8,8,0,0,1-8-8V104a8,8,0,0,1,8-8h48' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/><line x1='152' y1='104' x2='152' y2='216' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/><path d='M152,104h48a8,8,0,0,1,8,8V208a8,8,0,0,1-8,8H152' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/><path d='M128,40,40,128l88,88,88-88Z' fill='none' stroke='%23f59e0b' stroke-linecap='round' stroke-linejoin='round' stroke-width='16'/></svg>",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+        const stringManifest = JSON.stringify(manifestJSON);
+        const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blobManifest);
+        document.write(`<link rel="manifest" href="${manifestURL}">`);
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        industrial: {
+                            900: '#0f172a', 800: '#1e293b', accent: '#f59e0b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Estilos específicos para impresión y generación de PDF */
+        @media print {
+            body { background: white !important; color: black !important; }
+            nav { display: none !important; }
+            #view-post { 
+                background: white !important; 
+                border: none !important; 
+                box-shadow: none !important; 
+                padding: 0 !important; 
+                max-width: 100% !important; 
+            }
+            .prose-invert * { color: black !important; }
+            h1, h2, h3 { color: black !important; }
+            .text-industrial-accent { color: #666 !important; } /* Acento más oscuro para contraste en papel */
+            .print\\:hidden { display: none !important; }
+            @page { margin: 2cm; } /* Márgenes del PDF */
+        }
+    </style>
+</head>
+<body class="bg-industrial-900 text-slate-300 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-industrial-800 border-b border-slate-700 sticky top-0 z-20 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="showHome()">
+                <i class="ph ph-lightning text-industrial-accent text-3xl"></i>
+                <span class="text-xl font-bold text-white hidden sm:block">blog.crgm<span class="text-industrial-accent">.app</span></span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="showComposer()" class="bg-industrial-accent text-industrial-900 px-3 py-1.5 rounded-md font-bold text-sm flex items-center hover:bg-yellow-400 transition-colors">
+                    <i class="ph ph-plus-circle mr-1 text-lg"></i> <span class="hidden sm:inline">Nueva Entrada</span>
+                </button>
+                <div id="network-status" class="flex items-center space-x-1 px-2 py-1 rounded-md text-xs font-semibold bg-green-900/50 text-green-400 border border-green-700">
+                    <i class="ph ph-wifi-high"></i><span class="hidden sm:inline">Online</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-6 relative">
+        
+        <!-- Vista 1: Inicio (Grilla de Posts) -->
+        <div id="view-home" class="fade-in block">
+            <header class="mb-8 border-b border-slate-700 pb-6 flex justify-between items-end">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white mb-2">Bitácora <span class="text-industrial-accent">Operativa</span></h1>
+                    <p class="text-slate-400 text-sm sm:text-base">Datos sincronizados localmente vía IndexedDB.</p>
+                </div>
+            </header>
+            <div id="posts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Posts inyectados por JS -->
+            </div>
+        </div>
+
+        <!-- Vista 2: Leer Artículo -->
+        <div id="view-post" class="fade-in hidden max-w-3xl mx-auto bg-industrial-800 p-5 sm:p-8 rounded-xl shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center mb-6 print:hidden">
+                <button onclick="showHome()" class="flex items-center space-x-2 text-industrial-accent hover:text-yellow-300 transition-colors font-semibold">
+                    <i class="ph ph-arrow-left font-bold"></i><span>Volver</span>
+                </button>
+                <button onclick="window.print()" class="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-md transition-colors font-semibold shadow-sm">
+                    <i class="ph ph-printer font-bold"></i><span class="hidden sm:inline">PDF / Imprimir</span>
+                </button>
+            </div>
+            <div id="post-content"></div>
+        </div>
+
+        <!-- Vista 3: Redactar Entrada (Editor Dinámico) -->
+        <div id="view-composer" class="fade-in hidden max-w-2xl mx-auto bg-industrial-800 p-5 sm:p-8 rounded-xl shadow-2xl border border-slate-700">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white flex items-center"><i class="ph ph-pencil-simple text-industrial-accent mr-2"></i> Redactar Entrada</h2>
+                <button onclick="showHome()" class="text-slate-400 hover:text-white"><i class="ph ph-x text-2xl"></i></button>
+            </div>
+            
+            <form id="post-form" onsubmit="saveNewPost(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Título de la entrada</label>
+                    <input type="text" id="input-title" required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2.5 text-white focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent outline-none" placeholder="Ej: Falla resuelta en Caldera 2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Resumen (Subtítulo)</label>
+                    <input type="text" id="input-excerpt" required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2.5 text-white focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent outline-none" placeholder="Breve descripción del problema...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Contenido (Admite etiquetas HTML básicas como &lt;b&gt; o &lt;ul&gt;)</label>
+                    <textarea id="input-content" required rows="6" class="w-full bg-slate-900 border border-slate-600 rounded-md p-2.5 text-white focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent outline-none" placeholder="Escribe el reporte completo aquí..."></textarea>
+                </div>
+                <div class="flex justify-end pt-4 border-t border-slate-700">
+                    <button type="button" onclick="showHome()" class="px-4 py-2 text-slate-400 hover:text-white font-medium mr-3">Cancelar</button>
+                    <button type="submit" class="bg-industrial-accent text-industrial-900 px-6 py-2 rounded-md font-bold hover:bg-yellow-400 flex items-center">
+                        <i class="ph ph-floppy-disk mr-2 text-lg"></i> Guardar en Local
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- 2. LÓGICA DE LA BASE DE DATOS (IndexedDB) -->
+    <script>
+        const DB_NAME = 'crgmBlogDB';
+        const DB_VERSION = 2; // Incrementar versión para forzar actualización
+        const STORE_NAME = 'posts';
+        let db;
+
+        // Post semilla (por si la DB está vacía)
+        const initialPost = {
+            id: Date.now(),
+            title: "Bienvenido al Blog Offline-First",
+            excerpt: "Este es el primer registro autogenerado. Prueba creando el tuyo.",
+            content: "<p>Todo lo que escribas aquí se guarda directamente en la memoria de tu navegador (IndexedDB). Si cierras la pestaña o te quedas sin internet, tus datos seguirán aquí.</p><p>Usa el botón <b>Nueva Entrada</b> en la barra superior para agregar contenido dinámicamente.</p>",
+            date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }),
+            icon: "ph-lightning"
+        };
+
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onerror = (event) => console.error("Error IndexedDB:", event.target.error);
+
+            request.onupgradeneeded = (event) => {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                checkAndSeedData();
+            };
+        }
+
+        function checkAndSeedData() {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const countRequest = store.count();
+
+            countRequest.onsuccess = () => {
+                if (countRequest.result === 0) {
+                    const writeTx = db.transaction([STORE_NAME], "readwrite");
+                    writeTx.objectStore(STORE_NAME).add(initialPost);
+                    writeTx.oncomplete = () => loadPostsFromDB();
+                } else {
+                    loadPostsFromDB();
+                }
+            };
+        }
+
+        // --- FUNCIONES DINÁMICAS (CRUD Local) ---
+
+        function loadPostsFromDB() {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const posts = request.result;
+                // Ordenar más recientes primero
+                posts.sort((a, b) => b.id - a.id);
+                renderPostsGrid(posts);
+            };
+        }
+
+        function saveNewPost(event) {
+            event.preventDefault(); // Evitar recarga de página
+
+            const title = document.getElementById('input-title').value;
+            const excerpt = document.getElementById('input-excerpt').value;
+            let content = document.getElementById('input-content').value;
+            
+            // Convertir saltos de línea a <p> o <br> básicos para visualización
+            content = `<p>${content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+
+            const newPost = {
+                id: Date.now(), // ID único basado en timestamp
+                title: title,
+                excerpt: excerpt,
+                content: content,
+                date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }),
+                icon: "ph-wrench" // Ícono por defecto para nuevas entradas
+            };
+
+            const transaction = db.transaction([STORE_NAME], "readwrite");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.add(newPost);
+
+            request.onsuccess = () => {
+                // Limpiar formulario y volver a inicio
+                document.getElementById('post-form').reset();
+                showHome();
+                loadPostsFromDB(); // Recargar la grilla para ver el nuevo post
+                
+                // Pequeño feedback visual (opcional)
+                alert("Entrada guardada localmente con éxito.");
+            };
+            
+            request.onerror = (err) => {
+                console.error("Error al guardar:", err);
+                alert("Error al guardar la entrada.");
+            }
+        }
+
+        // --- RENDERIZADO DE VISTAS ---
+
+        function renderPostsGrid(posts) {
+            const grid = document.getElementById('posts-grid');
+            grid.innerHTML = ''; 
+
+            posts.forEach(post => {
+                const card = document.createElement('article');
+                card.className = "bg-industrial-800 rounded-xl p-5 border border-slate-700 shadow-lg hover:border-industrial-accent transition-all cursor-pointer flex flex-col h-full";
+                card.onclick = () => showPost(post.id);
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="bg-slate-900 p-2 rounded text-industrial-accent">
+                            <i class="ph ${post.icon || 'ph-article'} text-xl"></i>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">${post.date}</span>
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-bold text-white mb-2 leading-tight">${post.title}</h2>
+                    <p class="text-slate-400 text-sm flex-grow line-clamp-3">${post.excerpt}</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showPost(id) {
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+
+            request.onsuccess = () => {
+                const post = request.result;
+                if(post) {
+                    const contentDiv = document.getElementById('post-content');
+                    contentDiv.innerHTML = `
+                        <div class="mb-6 border-b border-slate-700 pb-4">
+                            <div class="flex items-center space-x-2 text-slate-400 mb-3 font-mono text-xs">
+                                <i class="ph ${post.icon || 'ph-article'} text-industrial-accent"></i>
+                                <span>${post.date}</span>
+                            </div>
+                            <h1 class="text-2xl sm:text-3xl font-extrabold text-white leading-tight mb-3">${post.title}</h1>
+                            <p class="text-base text-industrial-accent font-medium">${post.excerpt}</p>
+                        </div>
+                        <div class="prose prose-invert prose-sm sm:prose-base max-w-none text-slate-300">
+                            ${post.content}
+                        </div>
+                    `;
+                    hideAllViews();
+                    document.getElementById('view-post').classList.remove('hidden');
+                    window.scrollTo(0,0);
+                }
+            };
+        }
+
+        function showHome() { hideAllViews(); document.getElementById('view-home').classList.remove('hidden'); }
+        function showComposer() { hideAllViews(); document.getElementById('view-composer').classList.remove('hidden'); }
+        
+        function hideAllViews() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-post').classList.add('hidden');
+            document.getElementById('view-composer').classList.add('hidden');
+        }
+
+        // --- MANEJO DE RED ---
+        function updateNetworkStatus() {
+            const status = document.getElementById('network-status');
+            if (navigator.onLine) {
+                status.innerHTML = '<i class="ph ph-wifi-high"></i><span class="hidden sm:inline">OT Network</span>';
+                status.className = 'flex items-center space-x-1 px-2 py-1 rounded-md text-xs font-semibold bg-green-900/50 text-green-400 border border-green-700';
+            } else {
+                status.innerHTML = '<i class="ph ph-wifi-slash text-red-400"></i><span class="text-red-400 hidden sm:inline">Trinchera (Local)</span>';
+                status.className = 'flex items-center space-x-1 px-2 py-1 rounded-md text-xs font-semibold bg-red-900/30 text-red-400 border border-red-800';
+            }
+        }
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+
+        // Inicializar
+        window.onload = () => {
+            updateNetworkStatus();
+            initDB();
+        };
+    </script>
+
+    <!-- 3. SERVICE WORKER VIRTUAL INYECTADO (Magia Offline) -->
+    <script>
+        const swCode = `
+            const CACHE_NAME = 'crgm-blog-v1';
+            const ASSETS_TO_CACHE = [
+                '/',
+                // Almacenamos Tailwind y los iconos localmente
+                'https://cdn.tailwindcss.com',
+                'https://unpkg.com/@phosphor-icons/web'
+            ];
+
+            self.addEventListener('install', (event) => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                    .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+                    .then(() => self.skipWaiting())
+                );
+            });
+
+            self.addEventListener('activate', (event) => {
+                event.waitUntil(self.clients.claim());
+            });
+
+            self.addEventListener('fetch', (event) => {
+                // Estrategia Network First, fallback a Cache
+                event.respondWith(
+                    fetch(event.request).catch(() => {
+                        return caches.match(event.request);
+                    })
+                );
+            });
+        `;
+
+        const blobSW = new Blob([swCode], {type: 'application/javascript'});
+        const swURL = URL.createObjectURL(blobSW);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register(swURL)
+                .then(registration => {
+                    console.log('ServiceWorker registrado con éxito con el scope:', registration.scope);
+                })
+                .catch(err => {
+                    console.log('Fallo el registro del ServiceWorker:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
